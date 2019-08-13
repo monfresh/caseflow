@@ -21,6 +21,14 @@ class Organizations::TaskPagesController < OrganizationsController
   # }>
 
   def index
+    puts "HERE I AM "
+    puts "#######"
+    puts "#######"
+    puts "#######"
+    puts "#######"
+    puts "#######"
+    puts "#######"
+
     tasks = TaskPager.new(
       assignee: organization,
       tab_name: params[Constants.QUEUE_CONFIG.TAB_NAME_REQUEST_PARAM.to_sym],

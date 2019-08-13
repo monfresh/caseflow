@@ -334,9 +334,9 @@ export default class QueueTable extends React.PureComponent {
   }
 
   requestTasks = () => {
-    if (!this.props.useTaskPagesApi) {
-      return;
-    }
+    // if (!this.props.useTaskPagesApi) {
+    //   return;
+    // }
 
     this.setState({ loadingComponent: <LoadingScreen spinnerColor={LOGO_COLORS.QUEUE.ACCENT} /> });
 
