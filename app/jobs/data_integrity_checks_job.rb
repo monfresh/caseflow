@@ -9,6 +9,7 @@ class DataIntegrityChecksJob < CaseflowJob
     ExpiredAsyncJobsChecker
     OpenHearingTasksWithoutActiveDescendantsChecker
     OpenTasksWithClosedAtChecker
+    PendingIncompleteAndUncancelledTaskTimersChecker
     ReviewsWithDuplicateEpErrorChecker
     StuckAppealsChecker
     UntrackedLegacyAppealsChecker
