@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20191101145935) do
+ActiveRecord::Schema.define(version: 20191113160247) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -1220,6 +1220,19 @@ ActiveRecord::Schema.define(version: 20191101145935) do
     t.index ["ssn"], name: "index_veterans_on_ssn"
   end
 
+  create_table "virtual_hearing_establishments", force: :cascade do |t|
+    t.datetime "attempted_at", comment: "Async timestamp for most recent attempt to run."
+    t.datetime "canceled_at", comment: "Timestamp when job was abandoned."
+    t.datetime "created_at", null: false, comment: "Automatic timestamp when row was created."
+    t.string "error", comment: "Async any error message from most recent failed attempt to run."
+    t.datetime "last_submitted_at", comment: "Async timestamp for most recent job start."
+    t.datetime "processed_at", comment: "Timestamp for when the virtual hearing was successfully processed."
+    t.datetime "submitted_at", comment: "Async timestamp for initial job start."
+    t.datetime "updated_at", null: false, comment: "Timestamp when record was last updated."
+    t.bigint "virtual_hearing_id", null: false, comment: "Virtual Hearing the conference is being established for."
+    t.index ["virtual_hearing_id"], name: "index_virtual_hearing_establishments_on_virtual_hearing_id"
+  end
+
   create_table "virtual_hearings", force: :cascade do |t|
     t.string "alias", comment: "Alias for conference in Pexip"
     t.boolean "conference_deleted", default: false, null: false, comment: "Whether or not the conference was deleted from Pexip"
@@ -1238,6 +1251,7 @@ ActiveRecord::Schema.define(version: 20191101145935) do
     t.datetime "updated_at", null: false
     t.string "veteran_email", comment: "Veteran's email address"
     t.boolean "veteran_email_sent", default: false, null: false, comment: "Whether or not a notification email was sent to the veteran"
+    t.index ["alias"], name: "index_virtual_hearings_on_alias"
     t.index ["conference_id"], name: "index_virtual_hearings_on_conference_id"
     t.index ["created_by_id"], name: "index_virtual_hearings_on_created_by_id"
     t.index ["hearing_type", "hearing_id"], name: "index_virtual_hearings_on_hearing_type_and_hearing_id"
