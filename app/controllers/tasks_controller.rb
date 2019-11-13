@@ -7,28 +7,29 @@ class TasksController < ApplicationController
   skip_before_action :deny_vso_access, only: [:create, :index, :update, :for_appeal]
 
   TASK_CLASSES_LOOKUP = {
+    AttorneyDispatchReturnTask: AttorneyDispatchReturnTask,
+    AttorneyQualityReviewTask: AttorneyQualityReviewTask,
+    AttorneyRewriteTask: AttorneyRewriteTask,
+    AttorneyTask: AttorneyTask,
     ChangeHearingDispositionTask: ChangeHearingDispositionTask,
     ColocatedTask: ColocatedTask,
-    AttorneyRewriteTask: AttorneyRewriteTask,
-    AttorneyDispatchReturnTask: AttorneyDispatchReturnTask,
-    AttorneyTask: AttorneyTask,
-    AttorneyQualityReviewTask: AttorneyQualityReviewTask,
-    GenericTask: GenericTask,
-    Task: Task,
-    QualityReviewTask: QualityReviewTask,
-    JudgeAssignTask: JudgeAssignTask,
-    JudgeQualityReviewTask: JudgeQualityReviewTask,
-    JudgeDispatchReturnTask: JudgeDispatchReturnTask,
-    ScheduleHearingTask: ScheduleHearingTask,
-    TranslationTask: TranslationTask,
-    HearingAdminActionTask: HearingAdminActionTask,
-    MailTask: MailTask,
-    InformalHearingPresentationTask: InformalHearingPresentationTask,
-    PrivacyActTask: PrivacyActTask,
+    EvidenceSubmissionWindowTask: EvidenceSubmissionWindowTask,
     FoiaTask: FoiaTask,
+    GenericTask: GenericTask,
+    HearingAdminActionTask: HearingAdminActionTask,
+    InformalHearingPresentationTask: InformalHearingPresentationTask,
+    JudgeAddressMotionToVacateTask: JudgeAddressMotionToVacateTask,
+    JudgeAssignTask: JudgeAssignTask,
+    JudgeDispatchReturnTask: JudgeDispatchReturnTask,
+    JudgeQualityReviewTask: JudgeQualityReviewTask,
+    MailTask: MailTask,
+    PrivacyActTask: PrivacyActTask,
     PulacCerulloTask: PulacCerulloTask,
+    QualityReviewTask: QualityReviewTask,
+    ScheduleHearingTask: ScheduleHearingTask,
     SpecialCaseMovementTask: SpecialCaseMovementTask,
-    JudgeAddressMotionToVacateTask: JudgeAddressMotionToVacateTask
+    Task: Task,
+    TranslationTask: TranslationTask
   }.freeze
 
   def set_application
@@ -114,7 +115,7 @@ class TasksController < ApplicationController
 
   def ready_for_hearing_schedule
     ro = HearingDayMapper.validate_regional_office(params[:ro])
-    tasks = ScheduleHearingTask.tasks_for_ro(ro)
+    tasks = HearingCoordinatorScheduleQueue.new(current_user, regional_office: ro).tasks
 
     render json: json_tasks(tasks, ama_serializer: WorkQueue::RegionalOfficeTaskSerializer)
   end
@@ -159,7 +160,7 @@ class TasksController < ApplicationController
   end
 
   def verify_task_access
-    if current_user.vso_employee? && task_classes.exclude?(InformalHearingPresentationTask.name.to_sym)
+    if current_user.vso_employee? && !task_classes.all?(InformalHearingPresentationTask.name.to_sym)
       fail Caseflow::Error::ActionForbiddenError, message: "VSOs cannot create that task."
     end
   end
@@ -179,7 +180,7 @@ class TasksController < ApplicationController
   end
 
   def task_classes
-    create_params.map { |param| param[:type]&.to_sym }.uniq.compact
+    [create_params].flatten.map { |param| param[:type]&.to_sym }.uniq.compact
   end
 
   def valid_task_classes

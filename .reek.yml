@@ -10,6 +10,7 @@ detectors:
       - RatingDecision
   BooleanParameter:
     exclude:
+      - AsyncableJobsReporter#initialize
       - HearingRepository#slot_new_hearing
       - Veteran
   ControlParameter:
@@ -40,16 +41,20 @@ detectors:
       - Api::ApplicationController#upstream_known_error
       - AppealTaskHistory#build_events
       - ApplicationRecord#as_hash
+      - AssignJudgeteamRoles#process
       - AsyncableJobsReporter
       - ClaimReviewAsyncStatsReporter#as_csv
       - DataIntegrityChecksJob
       - DecisionIssueSyncJob
+      - VirtualHearings::DeleteConferencesJob#delete_conference
+      - VirtualHearings::DeleteConferencesJob#process_virtual_hearing
       - Fakes::EndProductStore
       - Fakes::BGSService#get_participant_id_for_user
       - Fakes::BGSServiceRecordMaker
       - Fakes::PersistentStore#convert_dates_from
       - FetchDocumentsForReaderJob#fetch_for_appeal
       - HearingSerializerBase
+      - LegacyAppeal#cancel_open_caseflow_tasks!
       - MonthlyMetricsReportJob#build_report
       - SyncReviewsJob
       - TaskTimerJob
@@ -84,6 +89,7 @@ detectors:
       - QueueConfig
       - RequestIssue
       - BulkTaskReassignment
+      - Task
   TooManyInstanceVariables:
     exclude:
       - AmaAppealDispatch
