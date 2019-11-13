@@ -12,7 +12,7 @@ feature "Appeal Edit issues", :all_dbs do
     # skip the sync call since all edit requests require resyncing
     # currently, we're not mocking out vbms and bgs
     allow_any_instance_of(EndProductEstablishment).to receive(:sync!).and_return(nil)
-    OrganizationsUser.add_user_to_organization(current_user, non_comp_org)
+    non_comp_org.add_user(current_user)
   end
 
   let(:veteran) do
@@ -462,10 +462,6 @@ feature "Appeal Edit issues", :all_dbs do
 
       expect(page).to have_button("Save", disabled: true)
 
-      fill_in "withdraw-date", with: "13/01/24"
-
-      expect(page).to have_button("Save", disabled: true)
-
       fill_in "withdraw-date", with: withdraw_date
 
       safe_click("#button-submit-update")
@@ -549,10 +545,6 @@ feature "Appeal Edit issues", :all_dbs do
 
       expect(page).to have_button("Save", disabled: true)
 
-      fill_in "withdraw-date", with: "13/01/24"
-
-      expect(page).to have_button("Save", disabled: true)
-
       fill_in "withdraw-date", with: withdraw_date
 
       click_edit_submit
@@ -576,15 +568,6 @@ feature "Appeal Edit issues", :all_dbs do
 
       expect(page).to have_content("We cannot process your request. Please select a date prior to today's date.")
       expect(page).to have_button("Save", disabled: true)
-
-      fill_in "withdraw-date", with: "14/20/2019"
-
-      expect(page).to have_content("We cannot process your request. Please enter a valid date.")
-      expect(page).to have_button("Save", disabled: true)
-
-      fill_in "withdraw-date", with: withdraw_date
-      expect(page).to_not have_content("We cannot process your request.")
-      expect(page).to have_button("Save", disabled: false)
     end
   end
 

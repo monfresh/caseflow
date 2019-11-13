@@ -13,7 +13,7 @@ class TaskActionRepository
       {
         selected: nil,
         options: organizations,
-        type: GenericTask.name
+        type: Task.name
       }
     end
 
@@ -101,7 +101,7 @@ class TaskActionRepository
       {
         selected: nil,
         options: users_to_options(Judge.list_all),
-        type: task.type
+        type: task.appeal_type.eql?(Appeal.name) ? task.type : "JudgeLegacyAssignTask"
       }
     end
 

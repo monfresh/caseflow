@@ -810,6 +810,32 @@ describe EndProductEstablishment, :postgres do
         end
       end
 
+      context "when the claim_type_code has changed outside of Caseflow" do
+        let(:claim_type_code) { "040SCNR" }
+
+        it "creates a record of the change in end product code updates" do
+          subject
+
+          epcu = end_product_establishment.end_product_code_updates.first
+
+          expect(end_product_establishment.code).to eq "030HLRR"
+          expect(epcu.code).to eq "040SCNR"
+          expect(epcu.created_at).to eq(Time.zone.now)
+        end
+
+        context "when the new claim_type_code has already been saved" do
+          it "does not create a new record" do
+            end_product_establishment.end_product_code_updates.create(code: "040SCNR", created_at: 1.hour.ago)
+
+            subject
+
+            epcus = end_product_establishment.end_product_code_updates
+            expect(epcus.count).to eq 1
+            expect(epcus.first.created_at).to eq 1.hour.ago
+          end
+        end
+      end
+
       context "when source exists" do
         context "when source implements on_sync" do
           let(:source) { create(:ramp_election) }

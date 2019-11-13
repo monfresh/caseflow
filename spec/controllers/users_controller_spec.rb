@@ -12,7 +12,7 @@ RSpec.describe UsersController, :all_dbs, type: :controller do
     let!(:attorneys) { create_list(:staff, 2, :attorney_role) }
 
     context "when role is passed" do
-      it "should return a list of only judges", skip: "flake" do
+      it "should return a list of only judges" do
         get :index, params: { role: "Judge" }
         expect(response.status).to eq(200)
         response_body = JSON.parse(response.body)
@@ -46,7 +46,7 @@ RSpec.describe UsersController, :all_dbs, type: :controller do
       end
 
       team_attorneys.each do |attorney|
-        OrganizationsUser.add_user_to_organization(attorney, judge_team)
+        judge_team.add_user(attorney)
       end
     end
 
@@ -64,7 +64,7 @@ RSpec.describe UsersController, :all_dbs, type: :controller do
     context "when judge ID is not passed" do
       subject { get :index, params: { role: "Attorney" } }
 
-      it "should return a list of all attorneys and judges", skip: "flake" do
+      it "should return a list of all attorneys and judges" do
         subject
         expect(response.status).to eq(200)
         response_body = JSON.parse(response.body)
@@ -77,7 +77,7 @@ RSpec.describe UsersController, :all_dbs, type: :controller do
     let!(:users) { create_list(:user, 3) }
     before do
       users.each do |user|
-        OrganizationsUser.add_user_to_organization(user, HearingsManagement.singleton)
+        HearingsManagement.singleton.add_user(user)
       end
     end
 
@@ -95,7 +95,7 @@ RSpec.describe UsersController, :all_dbs, type: :controller do
     let!(:judges) { create_list(:staff, 2, :judge_role) }
 
     context "when role is passed" do
-      it "should return a list of judges", skip: "flake" do
+      it "should return a list of judges" do
         get :index, params: { role: "Judge" }
         expect(response.status).to eq(200)
         response_body = JSON.parse(response.body)
@@ -120,6 +120,55 @@ RSpec.describe UsersController, :all_dbs, type: :controller do
         expect(response.status).to eq(200)
         response_body = JSON.parse(response.body)
         expect(response_body["non_judges"]["data"].size).to eq(user_count)
+      end
+    end
+  end
+
+  describe "GET /users?css_id=<css_id>" do
+    let!(:users) { create_list(:user, 8) }
+    let(:org) { create(:organization) }
+    let(:body) { JSON.parse(response.body) }
+
+    subject { get(:index, params: { css_id: css_id, exclude_org: org.name }) }
+
+    context "when there are zero matches" do
+      let(:css_id) { users.first.css_id + "foobar" }
+
+      it "returns empty array" do
+        subject
+
+        expect(response.status).to eq(200)
+        expect(body["users"]).to eq([])
+      end
+    end
+
+    context "when the only match is already in the Org" do
+      before do
+        org.users << users.first
+      end
+
+      let(:css_id) { users.first.css_id }
+
+      it "returns empty array" do
+        subject
+
+        expect(response.status).to eq(200)
+        expect(body["users"]).to eq([])
+      end
+    end
+
+    context "when the css_id is really a full_name" do
+      let!(:users) { [create(:user, full_name: "Foo Bar"), create(:user, full_name: "Jill Smith")] }
+      let(:css_id) { users.first.full_name }
+
+      it "matches by name" do
+        subject
+
+        expect(response.status).to eq(200)
+
+        found_users = body["users"]["data"]
+        expect(found_users.count).to eq(1)
+        expect(found_users.first["id"]).to eq(users.first.id.to_s)
       end
     end
   end
@@ -198,7 +247,7 @@ RSpec.describe UsersController, :all_dbs, type: :controller do
     end
 
     context "when current user is a BVA admin" do
-      before { OrganizationsUser.add_user_to_organization(authenticated_user, Bva.singleton) }
+      before { Bva.singleton.add_user(authenticated_user) }
 
       context "when marking the user inactive" do
         context "and the user is active" do

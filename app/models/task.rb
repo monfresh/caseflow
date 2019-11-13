@@ -438,7 +438,11 @@ class Task < ApplicationRecord
 
   def when_child_task_created(child_task)
     cancel_timed_hold unless child_task.is_a?(TimedHoldTask)
-    update!(status: :on_hold) if !on_hold?
+
+    if !on_hold?
+      Raven.capture_message("Closed task #{id} re-opened because child task created") if !open?
+      update!(status: :on_hold)
+    end
   end
 
   def task_is_assigned_to_users_organization?(user)
@@ -474,9 +478,11 @@ class Task < ApplicationRecord
       task.save!
     end
 
-    update!(status: Constants.TASK_STATUSES.cancelled)
+    # Preserve the open children and status of the old task
+    children.open.update_all(parent_id: sibling.id)
+    sibling.update!(status: status)
 
-    children.open.each { |task| task.update!(parent_id: sibling.id) }
+    update!(status: Constants.TASK_STATUSES.cancelled)
 
     [sibling, self, sibling.children].flatten
   end

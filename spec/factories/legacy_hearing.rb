@@ -24,6 +24,7 @@ FactoryBot.define do
         create(
           :case_hearing,
           user: user,
+          hearing_type: hearing_day.request_type,
           hearing_date: VacolsHelper.format_datetime_with_utc_timezone(scheduled_for),
           vdkey: hearing_day.id
         )
@@ -39,6 +40,7 @@ FactoryBot.define do
     vacols_id { case_hearing.hearing_pkseq }
     created_by { create(:user) }
     updated_by { create(:user) }
+    virtual_hearing { nil }
 
     trait :with_tasks do
       after(:create) do |hearing, _evaluator|

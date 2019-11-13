@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+##
+# When a veteran submits their form for an Appeal, Supplemental Claim, or Higher Level Review, they list the prior
+# decisions that they want to contest. These are intaken into Caseflow as request issues.  Request issues can also
+# be generated when a decision gets remanded or vacated.
+
 class RequestIssue < ApplicationRecord
   include Asyncable
   include HasBusinessLine
@@ -325,13 +330,13 @@ class RequestIssue < ApplicationRecord
   end
 
   def approx_decision_date_of_issue_being_contested
-    return if is_unidentified
-
     if contested_issue
       contested_issue.approx_decision_date
     elsif decision_date
       decision_date
     else
+      return if is_unidentified
+
       # in theory we should never get here
       fail MissingDecisionDate, id
     end
@@ -566,7 +571,15 @@ class RequestIssue < ApplicationRecord
   end
 
   def remanded?
+    # if this request issue is a correction for a decision issue from a remand supplemental claim,
+    # consider it a remanded request issue regardless of the decision issue disposition
+    return contested_decision_issue&.decision_review.try(:decision_review_remanded?) if decision_correction?
+
     contested_decision_issue&.remanded?
+  end
+
+  def title_of_active_review
+    duplicate_of_issue_in_active_review? ? ineligible_due_to.review_title : nil
   end
 
   private
@@ -629,10 +642,6 @@ class RequestIssue < ApplicationRecord
 
   def contested_issue
     @contested_issue ||= build_contested_issue
-  end
-
-  def title_of_active_review
-    duplicate_of_issue_in_active_review? ? ineligible_due_to.review_title : nil
   end
 
   def duplicate_of_issue_in_active_review?
