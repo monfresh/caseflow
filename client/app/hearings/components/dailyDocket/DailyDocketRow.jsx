@@ -173,6 +173,22 @@ class DailyDocketRow extends React.Component {
       });
   }
 
+  saveThenUpdateDisposition = (toDisposition) => {
+
+    const hearingWithDisp = {
+      ...this.props.hearing,
+      disposition: toDisposition
+    };
+    const hearing = deepDiff(this.state.initialState, hearingWithDisp);
+
+    this.saveHearing(hearing.externalId, hearing).then(() => {
+      this.update(hearingWithDisp);
+      if (['postponed', 'cancelled'].indexOf(toDisposition) === -1) {
+        this.setState({ initialState: hearingWithDisp });
+      }
+    });
+  };
+
   isAmaHearing = () => this.props.hearing.docketName === 'hearing'
 
   isLegacyHearing = () => this.props.hearing.docketName === 'legacy'
@@ -249,7 +265,7 @@ class DailyDocketRow extends React.Component {
         hearing={hearing} />
       <DispositionDropdown {...inputProps}
         cancelUpdate={this.cancelUpdate}
-        saveHearing={this.saveHearing}
+        saveThenUpdateDisposition={this.saveThenUpdateDisposition}
         openDispositionModal={openDispositionModal} />
       {(user.userHasHearingPrepRole && this.isAmaHearing()) &&
         <Waive90DayHoldCheckbox {...inputProps} />}

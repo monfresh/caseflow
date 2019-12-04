@@ -18,7 +18,7 @@ import { DISPOSITION_OPTIONS } from '../../constants';
 const staticSpacing = css({ marginTop: '5px' });
 
 export const DispositionDropdown = ({
-  hearing, update, readOnly, openDispositionModal, saveHearing
+  hearing, update, readOnly, openDispositionModal, saveThenUpdateDisposition
 }) => {
 
   return <div><SearchableDropdown
@@ -33,16 +33,17 @@ export const DispositionDropdown = ({
       }
 
       const fromDisposition = hearing.disposition;
+      const toDisposition = option.value;
 
       update({ disposition: option.value });
       openDispositionModal({
         hearing,
         fromDisposition,
-        toDisposition: option.value,
+        toDisposition,
         onCancel: () => {
           update({ disposition: fromDisposition });
         },
-        onConfirm: saveHearing
+        onConfirm: saveThenUpdateDisposition
       });
     }}
     readOnly={readOnly || !hearing.dispositionEditable}
@@ -54,7 +55,7 @@ DispositionDropdown.propTypes = {
   update: PropTypes.func,
   readOnly: PropTypes.bool,
   openDispositionModal: PropTypes.func,
-  saveHearing: PropTypes.func
+  saveThenUpdateDisposition: PropTypes.func
 };
 
 export const Waive90DayHoldCheckbox = ({ hearing, readOnly, update }) => (
